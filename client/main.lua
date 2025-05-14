@@ -1,3 +1,7 @@
+-- This resource is protected under the GNU General Public License v3.0.
+-- You may not redistribute this code without providing clear attribution to the original author.
+-- https://choosealicense.com/licenses/gpl-3.0/
+
 local cachedFramework = nil
 local playerCooldowns = {}
 
@@ -163,3 +167,7 @@ AddEventHandler('playerDropped', function()
     local src = source
     playerCooldowns[src] = nil
 end)
+
+-- This resource is protected under the GNU General Public License v3.0.
+-- You may not redistribute this code without providing clear attribution to the original author.
+-- https://choosealicense.com/licenses/gpl-3.0/

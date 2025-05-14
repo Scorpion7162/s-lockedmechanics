@@ -1,3 +1,6 @@
+-- This resource is protected under the GNU General Public License v3.0.
+-- You may not redistribute this code without providing clear attribution to the original author.
+-- https://choosealicense.com/licenses/gpl-3.0/
 fx_version 'cerulean'
 game 'gta5'
 author 'Scorpion'
@@ -26,3 +29,7 @@ dependencies {
     '/server:7290',
     '/onesync',
 }
+
+-- This resource is protected under the GNU General Public License v3.0.
+-- You may not redistribute this code without providing clear attribution to the original author.
+-- https://choosealicense.com/licenses/gpl-3.0/
