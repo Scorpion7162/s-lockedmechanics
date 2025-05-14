@@ -130,7 +130,7 @@ ensuring the resource.
 
 Ensure that the Config.MechID and Config.MechLabel are the same as the mechanic ID and label in your JG resource, you can place the vector3 in **JG MECHANIC** anywhere you wish. e.g:
 
-https://r2.fivemanage.com/image/iI3kRqnZD1ze.png
+![Example of how to Configure Mechanic](https://r2.fivemanage.com/image/iI3kRqnZD1ze.png)
 
 MechID and MechLabel in this example would be mygang.
 
