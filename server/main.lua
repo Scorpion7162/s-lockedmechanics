@@ -2,27 +2,9 @@
 -- You may not redistribute this code without providing clear attribution to the original author.
 -- https://choosealicense.com/licenses/gpl-3.0/
 
-local cachedFramework = nil
 local playerCooldowns = {}
+local Config = lib.load('shared.Config')
 
-function LoadFramework()
-    if not cachedFramework then
-        local qbState = GetResourceState('qb-core')
-        local esxState = GetResourceState('es_extended')
-        local qbxState = GetResourceState('qbx_core')
-        
-        if qbState == 'started' or qbState == 'starting' then
-            cachedFramework = 'qb'
-        elseif esxState == 'started' or esxState == 'starting' then
-            cachedFramework = 'esx'
-        elseif qbxState == 'started' or qbxState == 'starting' then
-            cachedFramework = 'qbx'
-        else
-            cachedFramework = 'standalone'
-        end
-    end
-    return cachedFramework
-end
 
 local classNames = {
     [0] = 'compacts', [1] = 'sedan', [2] = 'suv', [3] = 'coupe', 
@@ -102,64 +84,88 @@ local function SendNotification(src, message, type)
 end
 
 local function CheckVehicleRestrictions(src, vehicleEntity)
+    -- Validate entity exists
+    if not DoesEntityExist(vehicleEntity) then
+        SendNotification(src, 'Invalid vehicle')
+        return false
+    end
+    
     local vehicleClass = GetVehicleClass(vehicleEntity)
     local vehicleModel = GetEntityModel(vehicleEntity)
     
     if Config.UseClass then
         local vehicleClassName = classNames[vehicleClass]
         
-        if classLookup[vehicleClassName] then
-            return true
+        -- If using whitelist approach (Config.LockedClass contains ALLOWED classes)
+        if next(Config.LockedClass or {}) then
+            if classLookup[vehicleClassName] then
+                return true -- Vehicle IS allowed
+            end
+            SendNotification(src, 'This vehicle class is not allowed at this mechanic')
+            return false
+        else
+            return true -- No restrictions if LockedClass is empty
         end
-        
-        SendNotification(src, 'This vehicle class is not allowed at this mechanic')
-        return false
     else
-        if modelLookup[vehicleModel] then
-            return true
+        -- If using whitelist approach (Config.VehicleModelHash contains ALLOWED models)
+        if next(Config.VehicleModelHash or {}) then
+            if modelLookup[vehicleModel] then
+                return true -- Vehicle IS allowed
+            end
+            SendNotification(src, 'This vehicle model is not allowed at this mechanic')
+            return false
+        else
+            return true -- No restrictions if VehicleModelHash is empty
         end
-        
-        SendNotification(src, 'This vehicle model is not allowed at this mechanic')
-        return false
     end
 end
 
-RegisterNetEvent('s-lockmech:server:CheckAccess', function()
+lib.callback.register('s-lockmech:server:CheckAccess', function(source)
     local src = source
     
+    -- Rate limiting with stricter cooldown
     if playerCooldowns[src] and playerCooldowns[src] > GetGameTimer() then
         SendNotification(src, 'Please wait before trying again')
-        return
+        return false
     end
     
-    playerCooldowns[src] = GetGameTimer() + (Config.CooldownTime or 2000)
+    playerCooldowns[src] = GetGameTimer() + (Config.CooldownTime or 3000) -- Increased default cooldown
     
     if not CheckPermission(src) then
         SendNotification(src, 'You don\'t have permission to use this mechanic')
-        return
+        return false
     end
     
     local playerPed = GetPlayerPed(src)
-    local playerVehicle = GetVehiclePedIsIn(playerPed, false)
-    
-    if playerVehicle == 0 then
-        SendNotification(src, 'You need to be in a vehicle')
-        return
+    if not DoesEntityExist(playerPed) then
+        SendNotification(src, 'Invalid player entity')
+        return false
     end
     
-    local playerCoords = GetEntityCoords(playerPed)
-    local distance = #(playerCoords - Config.Location)
+    local playerVehicle = GetVehiclePedIsIn(playerPed, false)
+    if playerVehicle == 0 then
+        SendNotification(src, 'You need to be in a vehicle')
+        return false
+    end
     
-    if distance > Config.Distance then
+    -- Server-side distance validation for extra security
+    local playerCoords = GetEntityCoords(playerPed)
+    if not playerCoords then
+        SendNotification(src, 'Unable to get player position')
+        return false
+    end
+    
+    local distance = #(playerCoords - Config.Location)
+    if distance > (Config.Distance or 5.0) then -- Server validates with potentially different distance
         SendNotification(src, 'You are too far from the mechanic')
-        return
+        return false
     end
     
     if not CheckVehicleRestrictions(src, playerVehicle) then
-        return
+        return false
     end
     
-    TriggerClientEvent('s-lockmech:client:OpenMenu', src)
+    return true
 end)
 
 AddEventHandler('playerDropped', function()

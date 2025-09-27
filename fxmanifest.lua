@@ -4,10 +4,8 @@
 fx_version 'cerulean'
 game 'gta5'
 author 'Scorpion'
-description 'A simple resource to lock JG mechanic behind certain classes/vehicles, for more support join the discord'
-discord 'discord.gg/jgscripts'
-version '1.0.0'
--- Optimisation stuff
+description 'A simple resource to lock JG mechanic behind certain classes/vehicles - This is not an official JG resource, please open an issue on GitHub if you have any problems.'
+version '1.2.0'
 lua54 'yes'
 use_experimental_fxv2_oal 'yes'
 
@@ -19,6 +17,7 @@ server_scripts {
     'server/*.lua',
 }
 shared_scripts {
+    '@ox_lib/init.lua',
     'shared/*.lua',
 }
 
